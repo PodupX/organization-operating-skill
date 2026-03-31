@@ -1,33 +1,33 @@
 # API Reference Index
 
-这份索引文件只负责导航，不再承载全部细节。
-读取 skill 时，优先按任务类型进入对应 reference，避免一次加载所有 API 契约。
+This index file is for navigation only and does not repeat the full details.
+When using the skill, jump to the reference that matches the current task instead of loading every API contract at once.
 
-校验日期：2026-03-30
+Verified on: `2026-03-30`
 
-## 环境入口
+## Environment Entry Points
 
-- 生产环境默认：`https://api.zingup.club/biz`
-- 测试环境：`https://test-api.groupoo.net/biz`
-- 本地开发：`http://localhost:8080/biz`
-- skill 若未显式传 `--base-url` 或 `--env`，默认走生产环境
+- Default production base: `https://api.zingup.club/biz`
+- Test environment: `https://test-api.groupoo.net/biz`
+- Local development: `http://localhost:8080/biz`
+- If neither `--base-url` nor `--env` is provided, the skill defaults to production.
 
-## 阅读路径
+## Reading Path
 
-- 认证、token、请求头、环境切换：
-  读 [auth_reference.md](auth_reference.md)
-- 组织列表、详情、创建、修改、成员、加入组织：
-  读 [org_reference.md](org_reference.md)
-- 发帖、帖子分享链接、帖子读取限制：
-  读 [content_reference.md](content_reference.md)
-- 活动草稿、发布、搜索、报名、活动分享链接：
-  读 [activity_reference.md](activity_reference.md)
-- 能力优先级和后续待补清单：
-  读 [capability_inventory.md](capability_inventory.md)
+- Authentication, tokens, headers, and environment switching:
+  read [auth_reference.md](auth_reference.md)
+- Organization list, detail, create, update, members, and join flows:
+  read [org_reference.md](org_reference.md)
+- Post publishing, post share links, and post read limitations:
+  read [content_reference.md](content_reference.md)
+- Activity drafts, publish, search, signup, and share links:
+  read [activity_reference.md](activity_reference.md)
+- Capability priority and future gaps:
+  read [capability_inventory.md](capability_inventory.md)
 
-## 能力映射总览
+## Capability Map
 
-| 能力 ID | 参考文档 |
+| Capability ID | Reference |
 | --- | --- |
 | `auth.guest.generate` | [auth_reference.md](auth_reference.md) |
 | `auth.agent.third_login` | [auth_reference.md](auth_reference.md) |
@@ -55,8 +55,8 @@
 | `activity.sign.list` | [activity_reference.md](activity_reference.md) |
 | `activity.signup` | [activity_reference.md](activity_reference.md) |
 
-## 约定
+## Conventions
 
-- 不要默认整篇通读全部 references。
-- 优先先看 `scripts/org_skill_cli.py --help`，再补读对应 reference。
-- 文档里引用的返回结构，以当前已核实的服务端代码和实测结果为准。
+- Do not read every reference file by default.
+- Start with `scripts/org_skill_cli.py --help`, then open only the references needed for the current task.
+- Response shapes documented here follow the currently verified backend code and observed runtime behavior.

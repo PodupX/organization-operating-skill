@@ -1,22 +1,22 @@
 # Content Reference
 
-## 何时读取
+## When to Read
 
-- 要在组织里发帖子
-- 要确认帖子分享链接
-- 要排查帖子读取相关接口为什么和写接口表现不同
+- When publishing a post inside an organization
+- When confirming the post share-link pattern
+- When investigating why post read endpoints behave differently from post write endpoints
 
-## 相关能力
+## Related Capabilities
 
-| 能力 ID | API | 方法 |
+| Capability ID | API | Method |
 | --- | --- | --- |
 | `content.post.create` | `/outer/api/proxy/meta/api/v1/content/article/create` | `POST` |
 
 ## `content.post.create`
 
-- 接口：`POST /outer/api/proxy/meta/api/v1/content/article/create`
-- 鉴权：是
-- 推荐请求头：
+- Endpoint: `POST /outer/api/proxy/meta/api/v1/content/article/create`
+- Authentication: yes
+- Recommended headers:
   - `Authorization`
   - `x-platform=3`
   - `x-device-id`
@@ -28,21 +28,21 @@
   - `x-model`
   - `x-system-version`
   - `x-system_version`
-- 最小请求体：
+- Minimum request body:
   - `orgId`
   - `article.richText`
   - `article.visibled`
   - `article.vcmUids`
   - `saasList`
 
-最小示例：
+Minimum example:
 
 ```json
 {
   "orgId": 1141,
   "article": {
     "richText": [
-      { "insert": "Agent 联调帖：验证发帖能力。\n" }
+      { "insert": "Agent post for post-publishing verification.\n" }
     ],
     "visibled": 0,
     "vcmUids": []
@@ -51,53 +51,53 @@
 }
 ```
 
-## 已确认行为
+## Confirmed Behavior
 
-- 代理层会做 camelCase / snake_case 转换
-- `post-create` 命令已经内置 web 发帖附加头
-- 当前写接口比读接口稳定
-- 当前所谓“求助帖”没有单独 API，实际就是普通帖子能力
-- 测试环境给人验收时，优先返回 `sharePost` 页面链接
+- The proxy layer performs camelCase and snake_case conversion.
+- The `post-create` command already includes the required extra web headers.
+- The current write endpoint is more stable than the read endpoints.
+- What the product currently calls a "help post" is still just a normal post; there is no separate API for it.
+- In the test environment, prefer returning a `sharePost` page link for manual verification.
 
-## 读取限制
+## Read Limitations
 
-- 服务端存在 `ContentArticleOuterControllerV1`
-- 但测试环境里，通过通用请求直调帖子详情 / 列表接口时，实测可能返回：
+- The backend does have `ContentArticleOuterControllerV1`.
+- In the test environment, direct calls to post detail or list endpoints through generic requests may still return:
   - `code=1144`
   - `msg=System error.`
-- 这意味着当前 skill 第一阶段更适合把帖子能力定位为“写闭环优先”
+- That means the current first-phase skill should treat post support as a write-first workflow.
 
-## 分享链接
+## Share Links
 
-服务端分享基座配置：
+Server share-base configuration:
 
-- 生产：`https://share.zingup.club/`
-- 测试 / 本地：`https://test-share.groupoo.net/`
+- Production: `https://share.zingup.club/`
+- Test and local: `https://test-share.groupoo.net/`
 
-推荐按下面的 SSR 规则理解帖子分享链接：
+Recommended SSR rule for post share links:
 
 ```text
 {shareBase}ssr/sharePost/{articleId}?id={articleId}&t2=1&t8=ch
 ```
 
-补充验证：
+Additional validation notes:
 
-- 测试环境历史实测链接 `https://test-web.groupoo.net/ssr/sharePost/{articleId}?id={articleId}&t2=1&t8=ch` 也可打开分享页
-- `sharePost` 页面标题会直接显示帖子正文摘要
-- `shareArticle` / `shareDynamic` 在当前测试环境下能打开页面，但内容命中率不如 `sharePost`
+- A historically verified test-environment link, `https://test-web.groupoo.net/ssr/sharePost/{articleId}?id={articleId}&t2=1&t8=ch`, can also open the share page.
+- The `sharePost` page title directly shows a summary of the post body.
+- `shareArticle` and `shareDynamic` can open pages in the current test environment, but their content hit rate is weaker than `sharePost`.
 
-配置来源：
+Configuration source:
 
-- `application-prod.yml` 的 `biz-config.share.url=https://share.zingup.club/`
-- `application-test.yml` / `application-local.yml` 的 `biz-config.share.url=https://test-share.groupoo.net/`
+- `application-prod.yml`: `biz-config.share.url=https://share.zingup.club/`
+- `application-test.yml` and `application-local.yml`: `biz-config.share.url=https://test-share.groupoo.net/`
 
-## CLI 常用命令
+## Common CLI Commands
 
 ```bash
-python scripts/org_skill_cli.py --env test post-create --org-id 1141 --text "招募一位活动摄影志愿者"
+python scripts/org_skill_cli.py --env test post-create --org-id 1141 --text "Looking for one volunteer photographer for the event."
 ```
 
-## 仓库定位
+## Code Locations
 
-- 代理控制器：`biz-service/.../ProxyController.java`
-- 帖子外层控制器：`biz-service/.../ContentArticleOuterControllerV1.java`
+- Proxy controller: `biz-service/.../ProxyController.java`
+- Post outer controller: `biz-service/.../ContentArticleOuterControllerV1.java`

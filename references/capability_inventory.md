@@ -1,77 +1,77 @@
 # Capability Inventory
 
-这份文档记录 organization-operating-skill 当前已经接入的能力，以及后续仍值得补充的缺口。
-目标不是一次做全，而是优先把平台通用动作和组织个性化规则分开。
+This document tracks the capabilities already integrated into `organization-operating-skill` and the gaps that are still worth filling later.
+The goal is not full coverage on day one. Prioritize reusable platform actions and keep organization-specific rules separate.
 
-## 分层原则
+## Layering Principles
 
-- `skill` 负责动作能力：调用 API、拿结果、做最小校验。
-- `agent` 负责判断与表达：选择何时调用、如何引导用户、何时升级人工。
-- 组织配置负责规则差异：组织目标、可发起的互助类型、匹配字段、活动节奏、信誉规则。
+- The `skill` owns executable actions: calling APIs, collecting results, and doing minimal validation.
+- The `agent` owns judgment and communication: deciding when to call, how to guide users, and when to escalate to a human.
+- Organization configuration owns rule differences: organization goals, allowed help types, matching fields, event rhythm, and reputation rules.
 
-## 当前已接入能力
+## Capabilities Already Integrated
 
-当前已经具备可执行闭环，不需要再把下面这些能力当成待办：
+The following workflows are already executable and should no longer be treated as pending baseline work:
 
-- 认证闭环：
-  `auth.guest.generate`、`auth.agent.third_login`、`auth.refresh`
-- 用户资料：
-  `user.profile.get`、`user.profile.update`
-- 组织闭环：
-  `web.config.get`、`org.list`、`org.detail`、`org.detail.manage`、`org.create`、`org.update`、`org.member.list`、`org.member.page`、`org.join`
-- 内容闭环：
+- Authentication:
+  `auth.guest.generate`, `auth.agent.third_login`, `auth.refresh`
+- User profile:
+  `user.profile.get`, `user.profile.update`
+- Organization:
+  `web.config.get`, `org.list`, `org.detail`, `org.detail.manage`, `org.create`, `org.update`, `org.member.list`, `org.member.page`, `org.join`
+- Content:
   `content.post.create`
-- 活动闭环：
-  `activity.save`、`activity.publish`、`activity.cancel`、`activity.delete`、`activity.detail`、`activity.search`、`activity.org.list`、`activity.user.sign.list`、`activity.sign.list`、`activity.signup`
+- Activity:
+  `activity.save`, `activity.publish`, `activity.cancel`, `activity.delete`, `activity.detail`, `activity.search`, `activity.org.list`, `activity.user.sign.list`, `activity.sign.list`, `activity.signup`
 
-当前运营闭环主要通过帖子发布和活动能力承接。
-当前所谓“求助”能力也是通过 `content.post.create` 发普通帖子来承接，还没有独立的求助发布接口。
+The current operating workflow is mainly carried by post publishing and activity operations.
+What the product currently calls a "help" capability is still implemented through `content.post.create` as a normal post, and there is no standalone help-post API yet.
 
-## 后续待补能力
+## Capabilities Worth Adding Later
 
-下面这些仍然值得补，但已经不阻塞当前 skill 的最小闭环：
+The following additions are still valuable, but they do not block the current minimum viable workflow:
 
-| 优先级 | 能力 ID | 能力名称 | 作用 | 典型输入 | 典型输出 | 是否建议补 API |
+| Priority | Capability ID | Capability Name | Purpose | Typical Input | Typical Output | Suggested API |
 | --- | --- | --- | --- | --- | --- | --- |
-| P0 | interaction.comment.create / list | 互动与点评 | 支撑互评、追问、补充说明 | 目标内容 ID、评论内容 | 评论记录、时间、作者 | 是 |
-| P1 | help.offer.create / list | 发布可提供帮助 | 支撑“我能帮什么”这条主链路 | 组织 ID、帮助类型、说明 | 帮助供给记录 | 建议 |
-| P1 | match.recommend | 匹配推荐 | 让 agent 主动推荐可响应的人或任务 | 组织 ID、请求 ID、规则字段 | 候选成员 / 候选任务 | 建议 |
-| P1 | interaction.feedback.create | 感谢与反馈 | 为信誉系统提供正向数据 | 目标 ID、评分、感谢语 | 反馈结果 | 建议 |
-| P2 | reputation.get | 信誉 / 积分查询 | 排序、推荐、激励 | 用户 ID、组织 ID | 积分、信誉、徽章 | 可后补 |
-| P2 | summary.org.weekly | 摘要与周报 | 让 agent 输出组织总结和活跃信息 | 组织 ID、时间范围 | 汇总数据、案例 | 可后补 |
-| P2 | moderation.report | 风险上报 | 处理骚扰、失约、线下安全等风险 | 目标 ID、原因、证据 | 举报结果 | 可后补 |
+| P0 | interaction.comment.create / list | Comments and reviews | Support peer feedback, follow-up questions, and extra clarification | target content ID, comment body | comment records, time, author | Yes |
+| P1 | help.offer.create / list | Publish available help | Support the "what I can help with" workflow | org ID, help type, description | help-offer records | Recommended |
+| P1 | match.recommend | Matching recommendations | Let the agent proactively recommend people or tasks that fit | org ID, request ID, rule fields | candidate members or tasks | Recommended |
+| P1 | interaction.feedback.create | Thanks and feedback | Provide positive input for the reputation system | target ID, score, thank-you text | feedback result | Recommended |
+| P2 | reputation.get | Reputation and points lookup | Support ranking, recommendation, and incentives | user ID, org ID | points, reputation, badges | Optional later |
+| P2 | summary.org.weekly | Summary and weekly digest | Let the agent output organization summaries and activity highlights | org ID, time range | aggregated data, cases | Optional later |
+| P2 | moderation.report | Risk reporting | Handle harassment, no-shows, and offline safety risks | target ID, reason, evidence | report result | Optional later |
 
-## 组织配置，不应该直接做成 skill 能力
+## Organization Configuration Should Not Become Direct Skill Capabilities
 
-下面这些内容优先放进组织配置，而不是先写死到 skill 里：
+These items should live in organization configuration instead of being hardcoded into the skill:
 
-- 组织名称与一句话定义
-- 适合加入的人群
-- 允许的求助类型
-- 允许的帮助类型
-- 匹配字段，例如城市、风格、档期、线上线下
-- 固定活动节奏
-- 成功互助标准
-- 风险规则和禁用行为
-- 文案语气和欢迎词
+- Organization name and one-line definition
+- Target audience for joining
+- Allowed help-request types
+- Allowed help-offer types
+- Matching fields such as city, style, schedule, or online/offline preference
+- Fixed activity cadence
+- Success criteria for mutual help
+- Risk rules and prohibited behavior
+- Copy tone and welcome messaging
 
-## 你后续提供 API 时，我更希望按这个顺序补
+## Preferred Order for Future API Additions
 
-1. 评论 / 点评
-2. 发布 / 查询可提供帮助
-3. 匹配推荐
-4. 感谢与反馈
-5. 信誉、周报、风控
+1. Comments and reviews
+2. Publish and query available help
+3. Matching recommendations
+4. Thanks and feedback
+5. Reputation, weekly digest, and risk control
 
-## 每个能力需要你补哪些信息
+## Information Needed for Each New Capability
 
-每补一个新增能力，请尽量同时告诉我：
+Whenever you add a new capability, please provide as much of the following as possible:
 
-- 对应的 API 是什么
-- 在项目中怎么找到它
-- 注册 / 登录 / token 链路是否涉及它
-- 请求方法、路径、鉴权方式
-- 必填参数、可选参数
-- 返回字段里哪些最关键
-- 常见错误码或失败场景
-- 有没有现成的前端 / 服务端调用示例
+- Which API implements it
+- Where to find it in the project
+- Whether it affects registration, login, or token flows
+- Request method, path, and authentication mode
+- Required and optional parameters
+- The most important response fields
+- Common error codes or failure scenarios
+- Whether there are existing frontend or backend usage examples

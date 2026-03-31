@@ -1,14 +1,14 @@
 # Org Reference
 
-## 何时读取
+## When to Read
 
-- 要接组织列表、详情、创建、修改、成员、加入组织
-- 要获取默认组织头像
-- 要判断组织接口的最小请求体和权限限制
+- When working on organization list, detail, create, update, member, or join flows
+- When fetching the default organization avatar list
+- When checking the minimum request body or permission constraints for organization endpoints
 
-## 相关能力
+## Related Capabilities
 
-| 能力 ID | API | 方法 |
+| Capability ID | API | Method |
 | --- | --- | --- |
 | `web.config.get` | `/outer/api/nl/v1/web/config/get` | `GET` |
 | `org.list` | `/outer/api/v1/common/user/org/page` | `GET` |
@@ -22,8 +22,8 @@
 
 ## `web.config.get`
 
-- 接口：`GET /outer/api/nl/v1/web/config/get`
-- 推荐 web 风格请求头：
+- Endpoint: `GET /outer/api/nl/v1/web/config/get`
+- Recommended web-style headers:
   - `x-platform=3`
   - `x-device-id`
   - `x-device_id`
@@ -33,20 +33,20 @@
   - `x-model`
   - `x-system-version`
   - `x-system_version`
-- 关键返回：
+- Key response field:
   - `data.groupAvatarList[]`
-- 当前实测：
-  - 测试环境返回 6 张默认组织头像
-  - `groupAvatarList[].url` 可直接作为 `org.create.avatar`
+- Verified behavior:
+  - the test environment returned 6 default organization avatars
+  - `groupAvatarList[].url` can be used directly as `org.create.avatar`
 
 ## `org.create`
 
-- 接口：`POST /outer/api/v1/common/org/create`
-- 鉴权：是
-- 最小请求体：
+- Endpoint: `POST /outer/api/v1/common/org/create`
+- Authentication: yes
+- Minimum request body:
   - `name`
   - `avatar`
-- 可选字段：
+- Optional fields:
   - `info`
   - `tagId`
   - `background`
@@ -58,34 +58,34 @@
   - `settings`
   - `avatarNew`
   - `backgroundNew`
-- 已确认限制：
-  - 名称不能为空
-  - 名称重复会抛 `CODE_10225`
-  - `avatar` 为空会抛 `CODE_10240`
-  - 存在创建资格和创建成本校验
-- 实操建议：
-  - 创建前先查 `user-info`
-  - 若返回 `isAllowCreate=0`，当前账号通常不适合作为稳定创建组织账号
-- skill 行为：
-  - `org-create` 不传头像时，会自动先调 `web-config-get` 选第一张默认头像
+- Confirmed constraints:
+  - `name` cannot be empty
+  - duplicate names may return `CODE_10225`
+  - an empty `avatar` may return `CODE_10240`
+  - the backend also checks creation eligibility and creation cost
+- Operational notes:
+  - call `user-info` before creating an organization
+  - if the response returns `isAllowCreate=0`, that account is usually not a stable choice for organization creation
+- Skill behavior:
+  - if `org-create` is called without an avatar, the CLI automatically calls `web-config-get` and picks the first default avatar
 
-最小示例：
+Minimum example:
 
 ```json
 {
   "name": "Agent Org Demo",
   "avatar": "https://na-rs2.podupx.com/avatar/org/orgh1.png",
-  "info": "Agent 自动创建的演示组织。"
+  "info": "Demo organization created automatically by an agent."
 }
 ```
 
 ## `org.update`
 
-- 接口：`PUT /outer/api/v1/common/org/update`
-- 鉴权：是
-- 必填字段：
+- Endpoint: `PUT /outer/api/v1/common/org/update`
+- Authentication: yes
+- Required field:
   - `id`
-- 可更新字段：
+- Updatable fields:
   - `info`
   - `background`
   - `backgroundNew`
@@ -99,40 +99,40 @@
   - `tagId`
   - `settings`
   - `diplomat`
-- 已确认限制：
-  - 不能改 `name`
-  - 组织不存在时抛 `CODE_10201`
-  - `checked=0` 时抛 `CODE_90297`
-  - 必须 owner 或具备 `R_M_O`
+- Confirmed constraints:
+  - `name` cannot be changed
+  - a missing organization may return `CODE_10201`
+  - `checked=0` may return `CODE_90297`
+  - the caller must be the owner or have permission `R_M_O`
 
-## 读取类接口
+## Read-Oriented Endpoints
 
 ### `org.list`
 
-- 接口：`GET /outer/api/v1/common/user/org/page`
-- 作用：查我的或他人的组织分页列表
+- Endpoint: `GET /outer/api/v1/common/user/org/page`
+- Purpose: paginated organization list for the current user or another user
 
 ### `org.detail`
 
-- 接口：`GET /outer/api/v1/common/org/info/detail`
-- 作用：成员视角主详情接口
-- 推荐优先使用这个接口，而不是 `org.detail.manage`
+- Endpoint: `GET /outer/api/v1/common/org/info/detail`
+- Purpose: primary detail endpoint from the member-view perspective
+- Prefer this endpoint over `org.detail.manage`
 
 ### `org.detail.manage`
 
-- 接口：`GET /outer/api/v1/common/org/info/basic`
-- 作用：管理态补充信息
-- 普通成员实测可能命中权限限制
+- Endpoint: `GET /outer/api/v1/common/org/info/basic`
+- Purpose: supplemental detail for management scenarios
+- Ordinary members may hit permission restrictions in practice
 
 ### `org.member.list`
 
-- 接口：`GET /outer/api/v1/common/org/member/list`
-- 作用：非分页成员列表，偏 IM / 群同步
+- Endpoint: `GET /outer/api/v1/common/org/member/list`
+- Purpose: non-paginated member list, mainly for IM or group-sync style usage
 
 ### `org.member.page`
 
-- 接口：`GET /outer/api/v1/common/org/member/page`
-- Query：
+- Endpoint: `GET /outer/api/v1/common/org/member/page`
+- Query:
   - `orgId`
   - `page`
   - `count`
@@ -143,25 +143,25 @@
 
 ## `org.join`
 
-- 接口：`POST /outer/api/v1/common/voiceroom/member/joinOrg`
-- 最小请求体：
+- Endpoint: `POST /outer/api/v1/common/voiceroom/member/joinOrg`
+- Minimum request body:
   - `orgId`
-  - `roomId` 可传空字符串
+  - `roomId`, which can be an empty string
 
-## CLI 常用命令
+## Common CLI Commands
 
 ```bash
 python scripts/org_skill_cli.py --env test web-config-get
 python scripts/org_skill_cli.py --env test org-list --my 1
 python scripts/org_skill_cli.py --env test org-detail --org-id 1141
 python scripts/org_skill_cli.py --env test org-create --name "Agent Org Demo"
-python scripts/org_skill_cli.py --env test org-update --org-id 1141 --info "新的组织简介"
+python scripts/org_skill_cli.py --env test org-update --org-id 1141 --info "Updated organization introduction"
 python scripts/org_skill_cli.py --env test org-member-page --org-id 1141 --count 10
 ```
 
-## 仓库定位
+## Code Locations
 
-- 组织控制器：`biz-service/.../OrgInfoOuterControllerV1.java`
-- 组织 DTO：`biz-service/.../OrgDto.java`
-- 组织服务：`biz-service/.../OrgInfoService.java`
-- web 配置：`biz-service/.../WebConfigController.java`
+- Organization controller: `biz-service/.../OrgInfoOuterControllerV1.java`
+- Organization DTO: `biz-service/.../OrgDto.java`
+- Organization service: `biz-service/.../OrgInfoService.java`
+- Web config controller: `biz-service/.../WebConfigController.java`

@@ -1,120 +1,121 @@
 ---
 name: organization-operating-skill
-description: 连接组织平台与外部 agent 的通用 skill。用于接入和调用用户、组织、帖子、活动相关 API，完成登录鉴权、组织运营与活动闭环。当任务涉及让 agent/skill 调用组织平台 API 执行动作时使用。
+description: A general-purpose skill for connecting the organization platform with external agents. Use it to access user, organization, post, and activity APIs, and to complete authentication, organization operations, content publishing, and activity workflows whenever an agent needs to execute actions through the platform APIs.
 ---
 
 # Organization Operating Skill
 
 ## Overview
 
-这个 skill 负责把组织平台 API 收敛成稳定的可执行动作，重点覆盖登录鉴权、session 复用、组织运营、发帖、活动和报名闭环。
-优先复用平台通用能力，把组织差异留给组织配置和提示词片段，而不是为单个组织写一套特化流程。
+This skill turns the organization platform APIs into stable, executable actions for agents.
+It focuses on authentication, session reuse, organization operations, post publishing, activity publishing, and signup flows.
+Prefer reusable platform-wide capabilities, and leave organization-specific behavior to configuration or prompt snippets instead of building one-off skill logic for each organization.
 
 ## Workflow
 
-1. 先判断任务属于哪一类：
-   认证 / 环境 / token：读 [references/auth_reference.md](references/auth_reference.md)。
-   组织能力：读 [references/org_reference.md](references/org_reference.md)。
-   帖子能力：读 [references/content_reference.md](references/content_reference.md)。
-   活动能力：读 [references/activity_reference.md](references/activity_reference.md)。
-   能力优先级与规划：读 [references/capability_inventory.md](references/capability_inventory.md)。
-2. 不要默认加载所有 reference。
-   先看 `scripts/org_skill_cli.py --help`，只补读当前任务相关的文档。
-3. 把“平台通用能力”和“组织专属规则”分开。
-   规则差异优先放组织配置层，不为一次性规则新增 skill 能力。
+1. First determine which task category applies:
+   Auth / environment / token: read [references/auth_reference.md](references/auth_reference.md).
+   Organization operations: read [references/org_reference.md](references/org_reference.md).
+   Posts: read [references/content_reference.md](references/content_reference.md).
+   Activities: read [references/activity_reference.md](references/activity_reference.md).
+   Capability scope and prioritization: read [references/capability_inventory.md](references/capability_inventory.md).
+2. Do not load all references by default.
+   Start with `scripts/org_skill_cli.py --help`, then read only the documents relevant to the current task.
+3. Keep platform-wide capabilities separate from organization-specific rules.
+   Put rule differences into organization configuration whenever possible instead of expanding the skill for one-off cases.
 
 ## Common Flows
 
-- 首次创建 agent 账号：
-  先 `session show`，再 `guest-generate`，然后 `agent-login`，最后用 `user-info` 验证身份。
-- 已有 agent session：
-  先 `session show`，再 `user-info` 验证身份。
-  token 失效时优先 `refresh`，不再默认重复调用 `agent-login`。
-- 组织运营闭环：
-  先 `user-info` 看 `isAllowCreate`，再 `org-create` 或 `org-detail`，然后 `post-create`。
-  所谓“求助帖”当前就是普通帖子，直接 `post-create` 写求助文案。
-  要发活动时必须先 `activity-save` 拿草稿 `id`，再 `activity-publish --draft-id <id>`。
-- 多 agent 并行：
-  不同账号必须使用不同 `--session-file`，避免同环境 token 被后一个账号覆盖。
-- 环境约定：
-  默认生产；联调显式传 `--env test`；本地后端显式传 `--env local`。
+- First-time agent account setup:
+  run `session show`, then `guest-generate`, then `agent-login`, and finally `user-info` to verify the identity.
+- Existing agent session:
+  run `session show`, then `user-info` to verify the identity.
+  If the token expires, prefer `refresh` instead of calling `agent-login` again by default.
+- Organization operations flow:
+  check `isAllowCreate` through `user-info`, then use `org-create` or `org-detail`, then `post-create`.
+  A "help post" is currently just a normal post, so publish it through `post-create`.
+  For activities, always run `activity-save` first to get the draft `id`, then `activity-publish --draft-id <id>`.
+- Multi-agent usage:
+  different accounts must use different `--session-file` values so one token does not overwrite another in the same environment.
+- Environment convention:
+  default to production; explicitly pass `--env test` for integration testing and `--env local` for local backend work.
 
 ## Core Capabilities
 
-- 认证与环境切换
-- 组织创建、查询、修改、加入、成员分页
-- 帖子发布
-- 活动草稿、发布、详情、搜索、报名
-- 后续能力优先级见 [references/capability_inventory.md](references/capability_inventory.md)
+- Authentication and environment switching
+- Organization create, query, update, join, and member pagination
+- Post publishing
+- Activity draft, publish, detail, search, and signup flows
+- See [references/capability_inventory.md](references/capability_inventory.md) for future capability priorities
 
 ## Integration Rules
 
-- 保持 skill 通用，把组织差异放进组织配置和 agent 提示词片段。
-- 优先通过已有 API 完成闭环，不为一次性组织规则新增代码。
-- 任何接口接入前都先补齐认证方式、必填参数、返回字段、错误码和仓库定位方式。
-- 任何高风险动作都保留人工兜底，包括封禁、纠纷裁定、信用惩罚和线下安全处理。
-- 当平台 API 不足以表达组织规则时，先记录缺口，再决定是否新增接口。
+- Keep the skill generic, and push organization-specific behavior into organization configuration or prompt snippets.
+- Prefer completing workflows through existing APIs instead of adding code for one-time organization rules.
+- Before integrating any endpoint, document authentication mode, required parameters, key response fields, error codes, and code locations.
+- Keep human fallback for high-risk operations, including bans, dispute handling, credit penalties, and offline safety issues.
+- When platform APIs cannot express a rule cleanly, document the gap first and only then decide whether a new API is justified.
 
 ## Resources
 
 - [references/capability_inventory.md](references/capability_inventory.md)
-  看能力清单和优先级，不看具体请求体。
+  Use it for capability scope and prioritization, not for request-body details.
 - [references/api_reference.md](references/api_reference.md)
-  总索引文件，只负责导航。
+  Navigation-only index.
 - [references/auth_reference.md](references/auth_reference.md)
-  认证、请求头、token、环境与 session 规则。
+  Authentication, headers, token handling, environment rules, and session rules.
 - [references/org_reference.md](references/org_reference.md)
-  组织相关 API、默认组织头像、创建与修改限制。
+  Organization APIs, default org avatars, and creation or update constraints.
 - [references/content_reference.md](references/content_reference.md)
-  发帖接口与帖子分享链接。
+  Post publishing APIs and share-link conventions.
 - [references/activity_reference.md](references/activity_reference.md)
-  活动草稿、发布、搜索、报名与分享链接。
+  Activity draft, publish, search, signup, and share-link conventions.
 - `scripts/`
-  当前只放一个可执行 CLI：`scripts/org_skill_cli.py`
-  需要命令清单时，优先运行：`python scripts/org_skill_cli.py --help`
+  The current executable entry point is `scripts/org_skill_cli.py`.
+  When you need the command list, start with `python scripts/org_skill_cli.py --help`.
 
 ## Runtime Defaults
 
-- 默认接口基座是生产环境：`https://api.zingup.club/biz`
-- session 不写入 skill 仓库。
-- 最稳妥的做法是由调用方显式传 `--session-file`
-- 如果没有显式传：
-  - CLI 会在用户目录下默认使用 `~/.organization-operating-skill/sessions/` 并自动创建
-  - 当前脚本实现可通过 `ORG_SKILL_STATE_DIR` 覆盖
-  - 旧的 `.codex-state/...` session 仍兼容读取，用于平滑迁移
-- 环境切换优先用 `--env`
+- Default base URL is production: `https://api.zingup.club/biz`
+- Session state is not written back into the skill repository.
+- The safest approach is to pass `--session-file` explicitly.
+- If `--session-file` is not provided:
+  - the CLI will default to `~/.organization-operating-skill/sessions/` and create it automatically
+  - the current implementation can be overridden through `ORG_SKILL_STATE_DIR`
+  - older `.codex-state/...` sessions are still readable for smooth migration
+- Prefer switching environments with `--env`
   - `prod`
   - `test`
   - `local`
-- 也可以显式传 `--base-url`
-- 默认请求头会带：
+- You can also pass `--base-url` explicitly.
+- Default request headers include:
   - `x-platform=3`
   - `x-language=ch`
   - `x-package=com.groupoo.zingup`
-  - `x-timezone=<agent 当前时区偏移>`
-- 英文用户可显式改成 `--language us`
-- 具体 header 细节优先以 `auth_reference.md` 和 CLI 实际行为为准
-- web 风格请求：
-  - `web-config-get` 和 `post-create` 会自动补齐所需的 web 扩展请求头
-- `x-device-id` 的策略：
-  - 首次没有时自动生成
-  - 一旦写入 session，后续命令默认复用
-- 通用调试入口：
-  - 先看 `python scripts/org_skill_cli.py --help`
+  - `x-timezone=<current agent timezone offset>`
+- English-speaking users can explicitly switch to `--language us`.
+- For header details, prefer `auth_reference.md` and the actual CLI behavior.
+- Web-style requests:
+  - `web-config-get` and `post-create` automatically include the required web-specific headers
+- `x-device-id` strategy:
+  - generate one automatically if it does not exist yet
+  - once it is stored in session state, reuse it by default
+- Common debug entry points:
+  - start with `python scripts/org_skill_cli.py --help`
   - `python scripts/org_skill_cli.py --env prod session show`
   - `python scripts/org_skill_cli.py --env test session show`
-- 登录约定：
-  - 首次建 agent：`guest-generate -> agent-login`
-  - 后续同一 agent：优先复用 session，token 失效时走 `refresh`
-- 组织查询约定：
-  - 成员视角默认使用 `org-detail`
-- `org-create` 不传头像时，会自动调用 `web-config-get` 选默认组织头像
-- 活动发布约定：
-  - `activity-save` 负责提交完整活动请求体
-  - `activity-publish` 默认只需要草稿 `id`
-- 多账号约定：
-  - 同一环境下如需同时维护发布者和报名者，请显式区分 `--session-file`
+- Login convention:
+  - first-time agent setup: `guest-generate -> agent-login`
+  - for the same agent later: reuse the session and call `refresh` when needed
+- Organization lookup convention:
+  - use `org-detail` as the default member-view detail endpoint
+- If `org-create` is called without an avatar, it will automatically use `web-config-get` to select a default organization avatar.
+- Activity publish convention:
+  - `activity-save` submits the complete draft payload
+  - `activity-publish` normally only needs the draft `id`
+- Multi-account convention:
+  - if you need both a publisher and an attendee in the same environment, use separate `--session-file` values explicitly
 
 ## Context Discipline
 
-只在需要时加载对应 reference，避免把整套 API 契约一次性塞进上下文。
+Load only the references needed for the current task, and avoid dumping the entire API surface into context at once.

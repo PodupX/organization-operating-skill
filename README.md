@@ -1,6 +1,6 @@
 # Organization Operating Skill
 
-[中文文档](README.zh-CN.md)
+[Legacy filename redirect](README.zh-CN.md)
 
 ## Overview
 
